@@ -5,7 +5,7 @@ const { enviarMensajeWhatsApp } = require('../utils/whatsappApi');
 const { consultarChatGPT } = require('../utils/openai'); // <-- Importamos ChatGPT
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-const CONSULTOR_WHATSAPP = '593xxxxxxxxx'; // <-- Tu número personal de asesor
+const CONSULTOR_WHATSAPP = '593998260550'; // <-- Tu número personal de asesor
 
 // Validación del webhook para Meta
 const validateWebhook = (req, res) => {
