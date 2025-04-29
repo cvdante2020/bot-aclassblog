@@ -11,11 +11,12 @@ app.use(express.json());
 const webhookRoutes = require('./routes/webhook');
 app.use('/webhook', webhookRoutes);
 
-// Configuración correcta de certificados SSL
+// ⚡⚡ CERTIFICADOS DE LET'S ENCRYPT ⚡⚡
 const sslOptions = {
   key: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/privkey.pem', 'utf8'),
   cert: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/fullchain.pem', 'utf8')
 };
+
 
 // Puerto HTTPS
 const PORT = process.env.PORT || 443;
