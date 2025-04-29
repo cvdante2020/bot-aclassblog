@@ -13,9 +13,10 @@ app.use('/webhook', webhookRoutes);
 
 // ⚡⚡ CERTIFICADOS DE LET'S ENCRYPT ⚡⚡
 const sslOptions = {
-  key: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/privkey.pem', 'utf8'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/fullchain.pem', 'utf8')
+  key: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/fullchain.pem')
 };
+
 
 
 // Puerto HTTPS
