@@ -2,7 +2,6 @@ require('dotenv').config();
 const fs = require('fs');
 const https = require('https');
 const express = require('express');
-const path = require('path'); // <-- Agregado para asegurar rutas absolutas
 const app = express();
 
 // Middleware para leer JSON
@@ -12,7 +11,7 @@ app.use(express.json());
 const webhookRoutes = require('./routes/webhook');
 app.use('/webhook', webhookRoutes);
 
-// Configuración de certificados SSL reales de Let's Encrypt
+// Configuración correcta de certificados SSL
 const sslOptions = {
   key: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/privkey.pem', 'utf8'),
   cert: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/fullchain.pem', 'utf8')
