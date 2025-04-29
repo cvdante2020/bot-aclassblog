@@ -1,26 +1,14 @@
-require('dotenv').config();
-const fs = require('fs');
 const https = require('https');
-const express = require('express');
-const app = express();
+const fs = require('fs');
+const app = require('./app'); // O tu instancia de Express
 
-// Middleware para leer JSON
-app.use(express.json());
-
-// Importar rutas
-const webhookRoutes = require('./routes/webhook');
-app.use('/webhook', webhookRoutes);
-
-// Configuración de certificados SSL reales de Let's Encrypt
-const sslOptions = {
+const httpsOptions = {
   key: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/privkey.pem'),
   cert: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/fullchain.pem')
 };
 
-// Puerto HTTPS
 const PORT = process.env.PORT || 443;
 
-// Crear servidor HTTPS
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`🚀 Servidor de Aclassblog corriendo en HTTPS por el puerto ${PORT}`);
+https.createServer(httpsOptions, app).listen(PORT, () => {
+  console.log(`Servidor de Aclassblog corriendo en HTTPS por el puerto ${PORT}`);
 });
