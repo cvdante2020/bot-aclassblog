@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const https = require('https');
+const fs = require('fs');
 const app = express();
 
 // Middleware para leer JSON
@@ -11,10 +13,13 @@ const webhookRoutes = require('./routes/webhook');
 // Usar las rutas
 app.use('/webhook', webhookRoutes);
 
-// Puerto
-const PORT = process.env.PORT || 3000;
+// Opciones SSL
+const options = {
+  key: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/fullchain.pem'),
+};
 
-// Arrancar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor de Aclassblog corriendo en el puerto ${PORT}`);
+// Crear servidor HTTPS
+https.createServer(options, app).listen(443, () => {
+  console.log('🚀 Servidor de Aclassblog corriendo en HTTPS por el puerto 443');
 });
