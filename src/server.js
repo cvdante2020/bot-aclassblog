@@ -1,27 +1,26 @@
-require('dotenv').config();
 const fs = require('fs');
-const path = require('path');
 const https = require('https');
 const express = require('express');
+const bodyParser = require('body-parser');
+const webhookRoute = require('../routes/webhook');
+
 const app = express();
+app.use(bodyParser.json());
 
-// Middleware para leer JSON
-app.use(express.json());
+// Rutas
+app.use('/webhook', webhookRoute);
 
-// Importar rutas
-const webhookRoutes = require('./routes/webhook');
-app.use('/webhook', webhookRoutes);
+// Certificados SSL
+const privateKey = fs.readFileSync('./certs/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('./certs/fullchain.pem', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
 
-// ✅ Rutas locales para certificados (carpeta certs)
-const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, '../certs/privkey.pem'), 'utf8'),
-  cert: fs.readFileSync(path.join(__dirname, '../certs/fullchain.pem'), 'utf8')
-};
+// Servidor HTTPS
+const httpsServer = https.createServer(credentials, app);
 
-// Puerto HTTPS
+// Puerto
 const PORT = process.env.PORT || 443;
 
-// Crear servidor HTTPS
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`🚀 Servidor de Aclassblog corriendo en HTTPS por el puerto ${PORT}`);
+httpsServer.listen(PORT, () => {
+  console.log(`🚀 Servidor HTTPS corriendo en el puerto ${PORT}`);
 });
