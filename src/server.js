@@ -1,5 +1,6 @@
 require('dotenv').config();
 const fs = require('fs');
+const path = require('path');
 const https = require('https');
 const express = require('express');
 const app = express();
@@ -11,16 +12,11 @@ app.use(express.json());
 const webhookRoutes = require('./routes/webhook');
 app.use('/webhook', webhookRoutes);
 
-// ⚡⚡ CERTIFICADOS DE LET'S ENCRYPT ⚡⚡
+// ✅ Rutas locales para certificados (carpeta certs)
 const sslOptions = {
-  key: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/gptrobotic.com/fullchain.pem')
+  key: fs.readFileSync(path.join(__dirname, '../certs/privkey.pem'), 'utf8'),
+  cert: fs.readFileSync(path.join(__dirname, '../certs/fullchain.pem'), 'utf8')
 };
-
-  
-
-
-
 
 // Puerto HTTPS
 const PORT = process.env.PORT || 443;
