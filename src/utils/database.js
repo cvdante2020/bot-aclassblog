@@ -1,12 +1,10 @@
+require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-/**
- * Buscar una respuesta aleatoria por categoría y subcategoría
- */
 const obtenerRespuestaAleatoria = async (categoria, subcategoria) => {
   const { data, error } = await supabase
     .from('respuestas_chatbot')
@@ -27,9 +25,6 @@ const obtenerRespuestaAleatoria = async (categoria, subcategoria) => {
   return null;
 };
 
-/**
- * Guardar interacción de usuario y bot
- */
 const guardarInteraccion = async (telefono, mensajeUsuario, respuestaBot, categoriaConsultada) => {
   const { error } = await supabase
     .from('interacciones_chatbot')
@@ -45,9 +40,6 @@ const guardarInteraccion = async (telefono, mensajeUsuario, respuestaBot, catego
   }
 };
 
-/**
- * Guardar o actualizar la última intención del usuario
- */
 const actualizarUltimaIntencion = async (telefono, intencion) => {
   try {
     await supabase
@@ -58,9 +50,6 @@ const actualizarUltimaIntencion = async (telefono, intencion) => {
   }
 };
 
-/**
- * Obtener la última intención recordada del usuario
- */
 const obtenerUltimaIntencion = async (telefono) => {
   try {
     const { data, error } = await supabase
@@ -76,29 +65,10 @@ const obtenerUltimaIntencion = async (telefono) => {
     return null;
   }
 };
-const registrarUsuarioSiNoExiste = async (telefono) => {
-  try {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('telefono')
-      .eq('telefono', telefono)
-      .maybeSingle();
-
-    if (!data) {
-      await supabase
-        .from('usuarios')
-        .insert([{ telefono }]);
-      console.log('✅ Usuario registrado:', telefono);
-    }
-  } catch (error) {
-    console.error('❌ Error registrando usuario:', error.message);
-  }
-};
 
 module.exports = {
   obtenerRespuestaAleatoria,
   guardarInteraccion,
   actualizarUltimaIntencion,
   obtenerUltimaIntencion,
-  registrarUsuarioSiNoExiste
 };
