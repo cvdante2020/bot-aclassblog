@@ -1,7 +1,13 @@
 // src/controllers/chatbotController.js
 const axios = require('axios');
-const { guardarInteraccion, registrarUsuarioSiNoExiste } = require('../utils/database');
-const { enviarMensajeWhatsApp,enviarMenuAsesoriaUniversitaria, enviarMenuPrincipal, enviarOpcionesFinales, enviarMenuAsesoriaIngles, enviarMenuAsesoriaMatematica, enviarMenuAsesoriaOMatematica } = require('../utils/whatsappApi');
+const {
+  guardarInteraccion,
+  registrarUsuarioSiNoExiste,
+  actualizarUltimaIntencion,
+  obtenerUltimaIntencion,
+  guardarMensajeCentral, // ✅ asegúrate de incluirlo aquí también
+  verificarEstadoConversacion
+} = require('../utils/database');const { enviarMensajeWhatsApp,enviarMenuAsesoriaUniversitaria, enviarMenuPrincipal, enviarOpcionesFinales, enviarMenuAsesoriaIngles, enviarMenuAsesoriaMatematica, enviarMenuAsesoriaOMatematica } = require('../utils/whatsappApi');
 const { consultarChatGPT } = require('../utils/openai');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -19,6 +25,30 @@ const validateWebhook = (req, res) => {
     return res.status(200).send(challenge);
   }
   return res.sendStatus(403);
+};
+
+
+const procesarMensajeEntrante = async ({ telefono, mensajeUsuario, numeroAsociado, origenBot }) => {
+  try {
+    // 1. Verificar si el bot está activo
+    const estado = await verificarEstadoConversacion(telefono, numeroAsociado);
+    if (estado === 'manual') {
+      console.log(`🛑 Bot ${origenBot} desactivado para ${telefono}`);
+      return; // No responde el bot
+    }
+
+    // 2. Generar respuesta (GPT o lógica interna)
+    const respuestaBot = await obtenerRespuestaDelBot(mensajeUsuario, origenBot); // tu lógica IA
+
+    // 3. Enviar la respuesta al usuario (tu función actual de envío)
+    await enviarRespuestaWhatsApp(telefono, respuestaBot);
+
+    // 4. Guardar en Supabase centralizada
+    await guardarMensajeCentral(telefono, numeroAsociado, mensajeUsuario, respuestaBot, origenBot);
+
+  } catch (error) {
+    console.error('❌ Error procesando mensaje:', error);
+  }
 };
 
 // 🧠 Cache temporal de mensajes ya procesados
@@ -46,8 +76,16 @@ const handleWebhook = async (req, res) => {
 
       if (seleccionId === 'op_1') {
         respuestaBot = `🎯 Asesoría para ingreso a universidades en EE.UU. Te guiamos en todo el proceso de admisión y becas.`;
-        await guardarInteraccion(telefonoUsuario, seleccionTitulo, respuestaBot, 'respuesta_interactiva');
-        await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
+     await guardarMensajeCentral(
+    telefonoUsuario,
+    'Aclassblog', // número asociado al bot
+    seleccionTitulo || seleccionId, // lo que el usuario tocó
+    respuestaBot,
+    'Aclassblog'
+  );
+await actualizarUltimaIntencion(telefonoUsuario, 'saludo', 'Aclassblog'); // también importante
+
+       await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
         setTimeout(() => enviarMenuAsesoriaUniversitaria(telefonoUsuario), 500);
         return res.sendStatus(200);
       }
@@ -59,8 +97,16 @@ const handleWebhook = async (req, res) => {
 
       if (seleccionId === 'op_2') {
         respuestaBot = `🎓 Te preparamos para que puedas obtener tu certificación desde A1 hasta C2`;
-        await guardarInteraccion(telefonoUsuario, seleccionTitulo, respuestaBot, 'respuesta_interactiva');
-        await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
+     await guardarMensajeCentral(
+    telefonoUsuario,
+    'Aclassblog', // número asociado al bot
+    seleccionTitulo || seleccionId, // lo que el usuario tocó
+    respuestaBot,
+    'Aclassblog'
+  );
+await actualizarUltimaIntencion(telefonoUsuario, 'saludo', 'Aclassblog'); // también importante
+
+       await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
         setTimeout(() => enviarMenuAsesoriaIngles(telefonoUsuario), 500);
         return res.sendStatus(200);
       }
@@ -72,8 +118,15 @@ const handleWebhook = async (req, res) => {
 
       if (seleccionId === 'op_3') {
         respuestaBot = `📐 Cursos de matemáticas EGB - BGU - Cálculo`;
-        await guardarInteraccion(telefonoUsuario, seleccionTitulo, respuestaBot, 'respuesta_interactiva');
-        await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
+    await guardarMensajeCentral(
+    telefonoUsuario,
+    'Aclassblog', // número asociado al bot
+    seleccionTitulo || seleccionId, // lo que el usuario tocó
+    respuestaBot,
+    'Aclassblog'
+  );
+await actualizarUltimaIntencion(telefonoUsuario, 'saludo', 'Aclassblog'); // también importante
+     await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
         setTimeout(() => enviarMenuAsesoriaMatematica(telefonoUsuario), 500);
         return res.sendStatus(200);
       }
@@ -85,8 +138,15 @@ const handleWebhook = async (req, res) => {
 
       if (seleccionId === 'op_4') {
         respuestaBot = `🎖 Te preparamos para Olimpiadas Matemáticas.`;
-        await guardarInteraccion(telefonoUsuario, seleccionTitulo, respuestaBot, 'respuesta_interactiva');
-        await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
+    await guardarMensajeCentral(
+    telefonoUsuario,
+    'Aclassblog', // número asociado al bot
+    seleccionTitulo || seleccionId, // lo que el usuario tocó
+    respuestaBot,
+    'Aclassblog'
+  );
+await actualizarUltimaIntencion(telefonoUsuario, 'saludo', 'Aclassblog'); // también importante
+     await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
         setTimeout(() => enviarMenuAsesoriaOMatematica(telefonoUsuario), 500);
         return res.sendStatus(200);
       }
@@ -113,8 +173,13 @@ const handleWebhook = async (req, res) => {
       const saludos = ['HOLA', 'BUENOS DÍAS', 'BUENAS TARDES', 'BUENAS NOCHES'];
       if (saludos.some(s => userMessage.toUpperCase().includes(s))) {
         respuestaBot = `¡Hola! 👋 Soy **Chris**, tu asistente virtual en *Aclassblog*.\n\nEn menos de 1 minuto obtendrás toda la información que necesitas. 🚀✨\n\nAquí tienes nuestro menú:`;
-        await guardarInteraccion(telefonoUsuario, userMessage, respuestaBot, 'saludo');
-        await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
+     await guardarMensajeCentral(
+      telefonoUsuario,
+      'Aclassblog',
+      userMessage,
+      respuestaBot,
+      'Aclassblog'
+    );    await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
         await enviarMenuPrincipal(telefonoUsuario);
         return res.sendStatus(200);
       }
@@ -122,8 +187,13 @@ const handleWebhook = async (req, res) => {
       // Consultar a GPT
       const respuestaGPT = await consultarChatGPT(userMessage);
       respuestaBot = respuestaGPT;
-      await guardarInteraccion(telefonoUsuario, userMessage, respuestaBot, 'respuesta_chatgpt');
-      await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
+      await guardarMensajeCentral(
+      telefonoUsuario,
+      'Aclassblog',
+      userMessage,
+      respuestaBot,
+      'Aclassblog'
+    );     await enviarMensajeWhatsApp(telefonoUsuario, respuestaBot);
       setTimeout(() => enviarOpcionesFinales(telefonoUsuario), 500);
       return res.sendStatus(200);
     }
@@ -177,8 +247,13 @@ tomado tu exámen SAT. A menos que quieras aventurarte a universidades test-opti
 
   const respuesta = subopciones[opcionId];
   if (respuesta) {
-    await guardarInteraccion(telefono, opcionId, respuesta, 'submenu_asesoria');
-    await enviarMensajeWhatsApp(telefono, respuesta);
+    await guardarMensajeCentral(
+      telefono,
+      'Aclassblog',
+      opcionId,       // aquí va el ID (no seleccionTitulo)
+      respuesta,      // aquí va la respuesta generada
+      'Aclassblog'
+    ); await enviarMensajeWhatsApp(telefono, respuesta);
     setTimeout(async () => {
       await enviarOpcionesFinales(telefono);
     }, 500);
@@ -286,8 +361,13 @@ async function manejarSubopcionIngles(telefono, opcionId) {
 
   const respuesta = subopciones[opcionId];
   if (respuesta) {
-    await guardarInteraccion(telefono, opcionId, respuesta, 'submenu_asesoria');
-    await enviarMensajeWhatsApp(telefono, respuesta);
+   await guardarMensajeCentral(
+      telefono,
+      'Aclassblog',
+      opcionId,       // aquí va el ID (no seleccionTitulo)
+      respuesta,      // aquí va la respuesta generada
+      'Aclassblog'
+    );  await enviarMensajeWhatsApp(telefono, respuesta);
     setTimeout(async () => {
       await enviarOpcionesFinales(telefono);
     }, 500);
@@ -331,8 +411,13 @@ async function manejarSubopcionMatematica(telefono, opcionId) {
 
   const respuesta = subopciones[opcionId];
   if (respuesta) {
-    await guardarInteraccion(telefono, opcionId, respuesta, 'submenu_asesoria');
-    await enviarMensajeWhatsApp(telefono, respuesta);
+    await guardarMensajeCentral(
+      telefono,
+      'Aclassblog',
+      opcionId,       // aquí va el ID (no seleccionTitulo)
+      respuesta,      // aquí va la respuesta generada
+      'Aclassblog'
+    ); await enviarMensajeWhatsApp(telefono, respuesta);
     setTimeout(async () => {
       await enviarOpcionesFinales(telefono);
     }, 500);
@@ -375,8 +460,13 @@ async function manejarSubopcionOMatematica(telefono, opcionId) {
 
   const respuesta = subopciones[opcionId];
   if (respuesta) {
-    await guardarInteraccion(telefono, opcionId, respuesta, 'submenu_asesoria');
-    await enviarMensajeWhatsApp(telefono, respuesta);
+    await guardarMensajeCentral(
+      telefono,
+      'Aclassblog',
+      opcionId,       // aquí va el ID (no seleccionTitulo)
+      respuesta,      // aquí va la respuesta generada
+      'Aclassblog'
+    );  await enviarMensajeWhatsApp(telefono, respuesta);
     setTimeout(async () => {
       await enviarOpcionesFinales(telefono);
     }, 500);

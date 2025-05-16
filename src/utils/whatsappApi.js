@@ -313,5 +313,5 @@ module.exports = {
   enviarOpcionesFinales, // ✅ asegúrate de que esto exista aquí
   enviarMenuAsesoriaIngles,
   enviarMenuAsesoriaMatematica,
-  enviarMenuAsesoriaOMatematica,
+  enviarMenuAsesoriaOMatematica
 };
